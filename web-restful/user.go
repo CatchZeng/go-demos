@@ -93,11 +93,33 @@ func DeleteUser(c *gin.Context) {
 		if err := db.Delete(&user).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, err)
 		} else {
-			c.JSON(http.StatusOK, "delete the user success.")
+			c.JSON(http.StatusOK, "Successfully Deleted User.")
 		}
 	}
 }
 
 func UpdateUser(c *gin.Context) {
-	c.String(http.StatusOK, "Update User Endpoint Hint")
+	name := c.Param("name")
+	age, _ := strconv.Atoi(c.Param("age"))
+	password := c.Param("password")
+
+	db := openDB()
+	defer db.Close()
+
+	var user User
+	if err := db.First(&user, "name = ?", name).Error; err != nil {
+		c.String(http.StatusNoContent, "Without the user information.")
+	} else {
+		user.Name = name
+		user.Age = age
+		if len(password) > 0 {
+			user.Password = password
+		}
+
+		if err := db.Save(&user).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, err)
+		} else {
+			c.JSON(http.StatusOK, "Successfully Updated User.")
+		}
+	}
 }

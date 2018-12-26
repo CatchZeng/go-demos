@@ -29,5 +29,7 @@ func handleRequests() {
 
 	r.DELETE("/user/:name", DeleteUser)
 
+	r.PUT("/user/:name/:age/:password", UpdateUser)
+
 	r.Run(":8080")
 }
