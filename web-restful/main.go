@@ -23,5 +23,11 @@ func handleRequests() {
 
 	r.GET("/users", AllUsers)
 
+	r.GET("/user/:name", FindUser)
+
+	r.POST("/user", NewUser)
+
+	r.DELETE("/user/:name", DeleteUser)
+
 	r.Run(":8080")
 }

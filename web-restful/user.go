@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
@@ -36,22 +37,65 @@ func openDB() *gorm.DB {
 	return db
 }
 
+func FindUser(c *gin.Context) {
+	name := c.Param("name")
+
+	db := openDB()
+	defer db.Close()
+
+	var user User
+	if err := db.First(&user, "name = ?", name).Error; err != nil {
+		c.String(http.StatusNoContent, "Without the user information.")
+	} else {
+		c.JSON(http.StatusOK, user)
+	}
+}
+
 func AllUsers(c *gin.Context) {
 	db := openDB()
 	defer db.Close()
 
 	var users []User
-	db.Find(&users)
-
-	c.JSON(http.StatusOK, users)
+	if err := db.Find(&users).Error; err != nil {
+		c.JSON(http.StatusNoContent, "Without users information.")
+	} else {
+		c.JSON(http.StatusOK, users)
+	}
 }
 
 func NewUser(c *gin.Context) {
-	c.String(http.StatusOK, "New User Endpoint Hint")
+	name := c.PostForm("name")
+	age, _ := strconv.Atoi(c.PostForm("age"))
+	password := c.DefaultPostForm("password", "123456")
+
+	user := User{Name: name, Age: age, Password: password}
+
+	db := openDB()
+	defer db.Close()
+
+	if err := db.Create(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+	} else {
+		c.JSON(http.StatusOK, user)
+	}
 }
 
 func DeleteUser(c *gin.Context) {
-	c.String(http.StatusOK, "Delete User Endpoint Hint")
+	name := c.Param("name")
+
+	db := openDB()
+	defer db.Close()
+
+	var user User
+	if err := db.First(&user, "name = ?", name).Error; err != nil {
+		c.String(http.StatusNoContent, "Without the user information.")
+	} else {
+		if err := db.Delete(&user).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, err)
+		} else {
+			c.JSON(http.StatusOK, "delete the user success.")
+		}
+	}
 }
 
 func UpdateUser(c *gin.Context) {
