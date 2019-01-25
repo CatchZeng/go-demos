@@ -16,9 +16,10 @@ func main() {
 
 func handleRequests() {
 	r := gin.Default()
+	r.Static("/static", "./public")
 
 	r.GET("/", func(c *gin.Context) {
-		c.String(http.StatusOK, "Hello Todo App!")
+		c.Redirect(http.StatusTemporaryRedirect, "static")
 	})
 
 	r.GET("/todos", AllTodos)

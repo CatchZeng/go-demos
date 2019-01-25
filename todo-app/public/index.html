@@ -1,0 +1,132 @@
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+    <title>TODO App</title>
+
+    <!-- Latest compiled and minified CSS -->
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+    />
+
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css"
+    />
+
+    <!-- JQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+    <!-- Vue.js -->
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/vue/1.0.24/vue.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue-resource/0.7.0/vue-resource.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <h2>TODO App</h2>
+          <ul class="list-group">
+            <li class="list-group-item" v-for="todo in todos">
+              {{ todo.name }}
+              <span class="pull-right">
+                <button
+                  class="btn btn-xs btn-danger"
+                  v-on:click="deleteTodo($index)"
+                >
+                  <i class="fa fa-trash-o" aria-hidden="true"></i>
+                </button>
+              </span>
+            </li>
+          </ul>
+          <div class="input-group">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="New Todo"
+              v-on:keyup.enter="createTodo"
+              v-model="newTodo.name"
+            />
+            <span class="input-group-btn">
+              <button
+                class="btn btn-primary"
+                type="button"
+                v-on:click="createTodo"
+              >
+                Create
+              </button>
+            </span>
+          </div>
+          <!-- /input-group -->
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+
+<script>
+  new Vue({
+    el: "body",
+
+    data: {
+      todos: [],
+      newTodo: {}
+    },
+
+    // This is run whenever the page is loaded to make sure we have a current todo list
+    created: function() {
+      // Use the vue-resource $http client to fetch data from the /todos route
+      this.$http.get("/todos").then(function(response) {
+        const todos = response.data.data;
+        this.todos = todos ? todos : [];
+      });
+    },
+
+    methods: {
+      createTodo: function() {
+        if (!$.trim(this.newTodo.name)) {
+          this.newTodo = {};
+          return;
+        }
+
+        // Post the new todo to the /todos route using the $http client
+        this.$http
+          .post(
+            "/todo",
+            { name: this.newTodo.name },
+            {
+              emulateJSON: true
+            }
+          )
+          .success(function(response) {
+            this.newTodo.id = response.data.id;
+            this.todos.push(this.newTodo);
+            console.log("Todo created!");
+            console.log(this.newTodo);
+            this.newTodo = {};
+          })
+          .error(function(error) {
+            console.log(error);
+          });
+      },
+
+      deleteTodo: function(index) {
+        // Use the $http client to delete a todo by its id
+        this.$http
+          .delete("/todo/" + this.todos[index].id)
+          .success(function(response) {
+            this.todos.splice(index, 1);
+            console.log("Todo deleted!");
+          })
+          .error(function(error) {
+            console.log(error);
+          });
+      }
+    }
+  });
+</script>
